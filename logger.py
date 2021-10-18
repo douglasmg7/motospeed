@@ -5,10 +5,11 @@ import logging
 import datetime as dt
 import os
 
-LOG_PATH = os.path.join(os.environ['ZUNKAPATH'], 'log', 'handytech') 
-LOG_FILE = os.path.join(LOG_PATH, 'handytech.log')
+LOG_PATH = os.path.join(os.environ['ZUNKAPATH'], 'log', 'motospeed') 
+LOG_FILE = os.path.join(LOG_PATH, 'motospeed.log')
 if not os.path.isdir(LOG_PATH):
-    os.mkdir(LOG_PATH)
+    #  os.mkdir(LOG_PATH)
+    os.makedirs(LOG_PATH)
 
 class MyFormatter(logging.Formatter):
     converter=dt.datetime.fromtimestamp

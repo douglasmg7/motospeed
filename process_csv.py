@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, csv
+import os, datetime, csv
 from shutil import copyfile
 from logger import debug, info, warning, error, critical
 from sqlalchemy.orm import Session
@@ -12,6 +12,9 @@ def process_csv():
     with open(csv_file) as csv_data_file:
         csv_reader = csv.reader(csv_data_file)
         for product in csv_reader:
+            # Skip the row names.
+            if product[0] == 'Código':
+                continue
             print(product)
 
 #  # Upsert on db.
@@ -46,9 +49,11 @@ def process_csv():
 
 if os.path.exists(csv_file):
     process_csv()
-    copyfile(csv_file, f'{csv_file}_processed')
-    # Remove file, next will be download.
-    os.remove(csv_file)
+    # Rename file processd.
+    now = datetime.datetime.now().date()
+    new_file_name = os.path.join(os.path.dirname(csv_file), f'processed_{now.year}_{now.month}_{now.day}.csv')
+    copyfile(csv_file, new_file_name)
+    #  os.remove(csv_file)
 else:
     info(f'No {csv_file} to be processed')
 

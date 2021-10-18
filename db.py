@@ -34,5 +34,6 @@ class Product(Base):
 # Create db.
 if not os.path.exists(DB_FILE):
     info(f'Creating {DB_FILE}')
+    os.makedirs(os.environ['ZUNKAPATH_DB'])
     Base.metadata.create_all(engine)
     #  Base.metadata.drop_all()
