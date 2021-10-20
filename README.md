@@ -7,7 +7,7 @@ Update python version, to match the dev python version.
 ## Conda
 conda activate motospeed
 conda deactivate
-conda env create -f environment.yml
-conda env export > environment.yml
-conda env update -n conda-env -f /path/to/environment.yml
+conda env export > env.yml
+conda env update -n motospeed -f env.yml
+conda env create -f env.yml
 
