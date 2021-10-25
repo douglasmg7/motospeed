@@ -5,8 +5,9 @@ import os, sys, datetime, csv
 from shutil import copyfile
 from logger import debug, info, warning, error, critical
 from sqlalchemy.orm import Session
-#  from db import Product, engine
-from db import  engine
+#  from db import engine, Product
+from db import engine, Product
+import db
 
 import pandas as pd
 #  from pandas import DataFrame
@@ -37,8 +38,8 @@ def process_excel(xlsm_file):
         'SKU':                  'sku', 
         'EAN':                  'ean', 
         'MODELO':               'model', 
-        'DESCRIÇÃO':            'desc', 
-        'CX MASTER':            'cx_master', 
+        'DESCRIÇÃO':            'description', 
+        'CX MASTER':            'master_box', 
         'IPI':                  'ipi',
         'NCM':                  'ncm', 
         'CONEXÃO':              'connection', 
@@ -53,14 +54,11 @@ def process_excel(xlsm_file):
     }
     ms.rename(new_column_titles, axis=1, inplace=True)
 
-    #  ms.rename({'SKU':'sku', 'EAN':'ean', 'MODELO':'model', 'DESCRIÇÃO': 'desc', 'CX MASTER': 'cx_master', 'IPI':'ipi'}, axis=1, inplace=True)
-    #  ms.rename({'NCM':'ncm', 'CONEXÃO':'connection', 'COMPATIVEL':'compatibility', 'CURVA': 'curve', 'DIMENSOES     (CM)':'dim_cm'}, axis=1, inplace=True)
-    #  ms.rename({'PESO       (KG)': 'weight_kg', 'PREÇO':'price', 'DISTR': 'price_dist', 'PSV': 'price_sell', 'Estoque':'stock'}, axis=1, inplace=True)
     #  ms.columns
     #  ms['cx_master'].unique()
 
     # Remove row that have NaN, pd.NaT, None into Estoque.
-    ms = ms.dropna(subset=['stock', 'model', 'desc']);
+    ms = ms.dropna(subset=['stock', 'model', 'description']);
 
     # Remove not numeric values from price and price_dist.
     ms = ms.loc[pd.to_numeric(ms['price'], errors='coerce').notnull()]
@@ -70,24 +68,69 @@ def process_excel(xlsm_file):
     ms = ms.loc[(ms['price'] > 10) & (ms['price_dist'] > 10)]
 
     # Create a column for each dimension.
+    # Decimal separator correction.
+    ms.dim_cm = ms.dim_cm.str.replace(',', '.')
     dim = ms.dim_cm.str.split('x', expand=True)
-    ms['length'] = dim[0]
-    ms['width'] = dim[1]
-    ms['depth'] = dim[2]
+    ms['length_cm'] = dim[0]
+    ms['width_cm'] = dim[1]
+    ms['depth_cm'] = dim[2]
     ms.pop('dim_cm');
 
-    # Create title and desc columns.
-    desc_temp = ms.desc.str.split(':', n=1, expand=True)
+    # Create title and description columns.
+    desc_temp = ms.description.str.split(':', n=1, expand=True)
     ms['title'] = desc_temp[0]
-    ms['desc'] = desc_temp[1]
+    ms['description'] = desc_temp[1]
 
-    print(ms.head(3))
+    #  print(ms.head(3))
     #  print(ms.title.iloc[0])
+    print(f'Data frame shape: {ms.shape}')
 
-    ms.to_sql('test', con=engine)
+    # Upsert dataframe products.
+    now = datetime.datetime.utcnow()
+    with Session(engine) as sess:
+        for index, row in ms.iterrows():
+            #  print(row['sku'], row['title'])
+            #  print(row.sku)
+            #  dbProduct = db.Product(sku=product.sku, title=product.title, desc=product.desc)
+            try:
+                product = Product() 
+                product.sku = row.sku
+                product.title = row.title
+                product.description = row.description
+                product.ean = row.ean
+                product.model = row.model
+                product.connection = row.connection
+                product.compatibility = row.compatibility
+                product.curve = row.curve
+                product.ncm = row.ncm
+                product.master_box = row.master_box
+                product.ipi = row.ipi
+                product.weight_kg = row.weight_kg
+                product.length_cm = row.length_cm
+                product.width_cm = row.width_cm
+                product.depth_cm = row.depth_cm
+                product.price_100 = row.price * 100
+                product.price_dist_100 = row.price_dist * 100
+                product.price_sell_100 = row.price_sell * 100
+                product.stock = row.stock
+                product.changed_at = now
+            except Exception as e:
+                error(f'Product sku: {row.sku}. {e}')
+            #  print(vars(product))
+            sess.merge(product)
+        sess.commit()
+
+        # Update product not updated to stock 0.
+        one_minute_ago = now - datetime.timedelta(minutes=1)
+        for product in sess.query(Product).filter(Product.changed_at<one_minute_ago).all():
+            print(f'Product {product.sku} not in new excel file, setting stock to 0')
+            product.stock = 0
+            sess.merge(product)
+            sess.commit()
 
 
 if os.path.exists(csv_file):
+    #  process_excel('tabela_minus_one.xlsm')
     process_excel('tabela.xlsm')
 
     # Rename file processd.

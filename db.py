@@ -10,31 +10,36 @@ from sqlalchemy.orm import declarative_base, Session
 
 DB_FILE = os.environ['MOTOSPEED_DB']
 #  debug(f'Db file: {DB_FILE}')
-#  engine = create_engine(f'sqlite+pysqlite:///{DB_FILE}', echo=False, future=True)
-engine = create_engine(f'sqlite+pysqlite:///{DB_FILE}', echo=False)
+engine = create_engine(f'sqlite+pysqlite:///{DB_FILE}', echo=False, future=True)
+#  engine = create_engine(f'sqlite+pysqlite:///{DB_FILE}', echo=False)
 Base = declarative_base()
 session = Session(engine)
 
-
-
-
-
-
-
-#  class Product(Base):
-    #  __tablename__ = 'product'
-    #  code = Column(String, primary_key=True)
-    #  title = Column(String)
-    #  desc = Column(String)
-    #  price = Column(Integer)
-    #  stock = Column(Integer)
-    #  zunka_product_id = Column(String)
-    #  created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-
-
-
-
+class Product(Base):
+    __tablename__ = 'product'
+    sku = Column(String, primary_key=True)
+    title = Column(String)
+    description = Column(String)
+    ean = Column(String)
+    model = Column(String)
+    connection = Column(String)
+    compatibility = Column(String)
+    curve = Column(String)          # Product seller rank.
+    ncm = Column(String)
+    master_box = Column(Integer)    # Quantity of products for master box.
+    weight_kg = Column(Integer)
+    length_cm = Column(Integer)
+    width_cm = Column(Integer)
+    depth_cm = Column(Integer)
+    ipi = Column(Integer)
+    price_100 = Column(Integer)
+    price_dist_100 = Column(Integer)    # Product price when buy as master box.
+    price_sell_100 = Column(Integer)
+    stock = Column(Integer)
+    zunka_product_id = Column(String, default='')
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    changed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    removed_at = Column(DateTime)
 
 #  product = Product(it_code='qwe', desc_item='asdf asdf ', vl_item=123)
 #  session.add(product)
