@@ -27,11 +27,11 @@ class Product(Base):
     curve = Column(String)          # Product seller rank.
     ncm = Column(String)
     master_box = Column(Integer)    # Quantity of products for master box.
-    weight_kg = Column(Integer)
-    length_cm = Column(Integer)
-    width_cm = Column(Integer)
-    depth_cm = Column(Integer)
-    ipi = Column(Integer)
+    weight_g = Column(Integer)
+    length_mm = Column(Integer)
+    width_mm = Column(Integer)
+    depth_mm = Column(Integer)
+    ipi_100 = Column(Integer)
     price_100 = Column(Integer)
     price_dist_100 = Column(Integer)    # Product price when buy as master box.
     price_sell_100 = Column(Integer)
