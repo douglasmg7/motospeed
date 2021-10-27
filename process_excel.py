@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 import os, sys, datetime, csv
 from shutil import copyfile
@@ -17,7 +17,7 @@ import motospeed
 info('Running ...')
 info(f'Script: {__version__}')
 info(f'Python: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')
-csv_file = os.environ['MOTOSPEED_CSV']
+excel_file = os.environ['MOTOSPEED_EXCEL']
 
 def process_excel(xlsm_file):
     ms = pd.read_excel(xlsm_file)
@@ -127,7 +127,7 @@ def process_excel(xlsm_file):
 
     #  print(ms.head(3))
     #  print(ms.title.iloc[0])
-    print(f'Data frame shape: {ms.shape}')
+    info(f'Data frame shape: {ms.shape}')
 
     # Convert ipi to decimals to x100.
     ms.ipi.fillna(0, inplace=True)
@@ -135,7 +135,7 @@ def process_excel(xlsm_file):
     ms.ipi_100 = ms.ipi_100.astype(int)
     ms.pop('ipi')
 
-    print(ms.dtypes)
+    #  print(ms.dtypes)
 
     # Upsert dataframe products.
     now = datetime.datetime.utcnow()
@@ -175,20 +175,21 @@ def process_excel(xlsm_file):
         # Update product not updated to stock 0.
         one_minute_ago = now - datetime.timedelta(minutes=1)
         for product in sess.query(Product).filter(Product.changed_at<one_minute_ago).all():
-            print(f'Product {product.sku} not in new excel file, setting stock to 0')
+            info(f'Product {product.sku} not in new excel file, setting stock to 0')
             product.stock = 0
             sess.merge(product)
             sess.commit()
 
 
-if os.path.exists(csv_file):
+if os.path.exists(excel_file):
     #  process_excel('tabela_minus_one.xlsm')
-    process_excel('tabela.xlsm')
+    #  process_excel('tabela.xlsm')
+    process_excel(excel_file)
 
     # Rename file processd.
     now = datetime.datetime.now().date()
-    new_file_name = os.path.join(os.path.dirname(csv_file), f'{now.year}_{now.month}_{now.day}_processed_motospeed_products.csv')
-    #  copyfile(csv_file, new_file_name)
-    #  os.remove(csv_file)
+    new_file_name = os.path.join(os.path.dirname(excel_file), f'{now.year}_{now.month}_{now.day}_processed_motospeed_products.csv')
+    copyfile(excel_file, new_file_name)
+    os.remove(excel_file)
 else:
-    info(f'No {csv_file} to be processed')
+    info(f'No {excel_file} to be processed')
