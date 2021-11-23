@@ -47,12 +47,13 @@ def process_excel(xlsm_file):
         'CURVA':                'curve', 
         'DIMENSOES     (CM)':   'dim_cm',
         'PESO       (KG)':      'weight_kg', 
-        'PREÇO':                'price', 
-        'DISTR':                'price_dist', 
-        'PSV':                  'price_sell', 
+        'PREÇO REVENDA':        'price', 
+        'PREÇO DISTRIBUIDOR':   'price_dist', 
+        'STREET PRICE':         'price_sell', 
         'Estoque':              'stock',
     }
     ms.rename(new_column_titles, axis=1, inplace=True)
+    ms.info(3)
 
     #  ms.columns
     #  ms['cx_master'].unique()
@@ -189,7 +190,7 @@ if os.path.exists(excel_file):
     # Rename file processd.
     now = datetime.datetime.now().date()
     new_file_name = os.path.join(os.path.dirname(excel_file), f'{now.year}_{now.month}_{now.day}_processed_motospeed_products.csv')
-    copyfile(excel_file, new_file_name)
-    os.remove(excel_file)
+    #  copyfile(excel_file, new_file_name)
+    #  os.remove(excel_file)
 else:
     info(f'No {excel_file} to be processed')

@@ -11,3 +11,8 @@ conda env export > env.yml
 conda env update -n motospeed -f env.yml
 conda env create -f env.yml
 
+## Dúvidas
+O que seria o preço 1,25 m-up
+Falta o estoque
+
+
